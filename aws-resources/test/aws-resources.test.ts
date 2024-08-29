@@ -1,13 +1,13 @@
 // import * as cdk from 'aws-cdk-lib';
 // import { Template } from 'aws-cdk-lib/assertions';
-// import * as LoanproApp from '../lib/loanpro-app-stack';
+// import * as AwsResources from '../lib/aws-resources-stack';
 
 // example test. To run these tests, uncomment this file along with the
-// example resource in lib/loanpro-app-stack.ts
+// example resource in lib/aws-resources-stack.ts
 test('SQS Queue Created', () => {
 //   const app = new cdk.App();
 //     // WHEN
-//   const stack = new LoanproApp.LoanproAppStack(app, 'MyTestStack');
+//   const stack = new AwsResources.AwsResourcesStack(app, 'MyTestStack');
 //     // THEN
 //   const template = Template.fromStack(stack);
 

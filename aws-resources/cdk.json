@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/loanpro-app.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/aws-resources.ts",
   "watch": {
     "include": [
       "**"
