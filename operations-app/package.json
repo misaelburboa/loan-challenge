@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "aws-amplify": "^6.5.3",
     "axios": "^1.7.5",
     "formik": "^2.4.6",
     "next": "14.2.7",

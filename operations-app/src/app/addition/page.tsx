@@ -4,6 +4,7 @@ import { FC, useState } from "react";
 import Layout from "@/components/Layout";
 import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik";
 import * as Yup from "yup";
+import axios from "axios";
 
 const AddPage: FC = () => {
   const [result, setResult] = useState<number>(0);
@@ -15,10 +16,31 @@ const AddPage: FC = () => {
     validationSchema: Yup.object({
       numbers: Yup.array().of(Yup.number().required("Required")),
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
+      console.log(values);
       // Calculate the sum of all numbers
-      const total = values.numbers.reduce((acc, num) => acc + num, 0);
-      setResult(total);
+      // const total = values.numbers.reduce((acc, num) => acc + num, 0);
+      // setResult(total);
+
+      const url =
+        "https://45qiqdh7m5.execute-api.us-east-1.amazonaws.com/dev/api/addition";
+
+      try {
+        const response = await axios.post(
+          url,
+          { values: values.numbers },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        return response.data.access_token;
+      } catch (error) {
+        console.error("Error getting token:", error);
+        throw error;
+      }
     },
   });
 

@@ -38,6 +38,7 @@ export const index = async (
     if (!event.body) {
       return {
         statusCode: 400,
+        message: "No body provided",
       };
     }
 
@@ -47,6 +48,7 @@ export const index = async (
     if (values.length === 0) {
       return {
         statusCode: 400,
+        message: "No values provided",
       };
     }
 
