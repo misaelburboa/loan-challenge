@@ -28,17 +28,16 @@ if (!OPERATIONS_TABLE || !RECORDS_TABLE) {
 
 const dynamoDbClient = new dynamodb.DynamoDBClient({});
 
-export const index = async (
+export const subtract = async (
   event: lambda.APIGatewayProxyEvent,
   context: lambda.Context
 ) => {
-  const OPERATION_TYPE = "addition";
+  const OPERATION_TYPE = "subtraction";
 
   try {
     if (!event.body) {
       return {
         statusCode: 400,
-        message: "No body provided",
       };
     }
 
@@ -48,13 +47,12 @@ export const index = async (
     if (values.length === 0) {
       return {
         statusCode: 400,
-        message: "No values provided",
       };
     }
 
     const operationResult = values.reduce((acc, value) => {
-      return acc + value;
-    }, 0);
+      return acc - value;
+    });
 
     const command = new dynamodb.GetItemCommand({
       TableName: OPERATIONS_TABLE,

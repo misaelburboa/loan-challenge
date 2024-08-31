@@ -22,14 +22,15 @@ export const useUser = () => {
     fetchUser();
   }, []);
 
-  if (user === undefined) {
-    // setIsLoading(true);
-  }
-
   const onSignOut = () => {
     setIsLoggedIn(false);
     setUser(null);
   };
 
-  return { user, isLoading, isLoggedIn, onSignOut };
+  const onSignIn = () => {
+    setIsLoggedIn(true);
+  };
+
+
+  return { user, isLoading, isLoggedIn, onSignOut, onSignIn };
 };

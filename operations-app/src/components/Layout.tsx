@@ -20,42 +20,6 @@ const SignOut = ({ onSignOut }: { onSignOut: () => void }) => {
   );
 };
 
-// const User = () => {
-//   const [user, setUser] = useState<object | null | undefined>(undefined);
-
-//   useEffect(() => {
-//     async function fetchUser() {
-//       try {
-//         const currentUser = await getCurrentUser();
-//         console.log(currentUser);
-//         setUser(currentUser);
-//       } catch (error) {
-//         setUser(null);
-//       }
-//     }
-
-//     fetchUser();
-//   }, []);
-
-//   if (user === undefined) {
-//     return <p>Loading ....</p>;
-//   }
-
-//   if (user) {
-//     return <SignOut onSignOut={() => setUser(null)} />;
-//   }
-
-//   return (
-//     <Login
-//       onSignedIn={async () => {
-//         const currentUser = await getCurrentUser();
-//         console.log(currentUser);
-//         setUser(currentUser);
-//       }}
-//     />
-//   );
-// };
-
 interface LayoutProps {
   children: ReactNode;
   title: string;
@@ -63,7 +27,6 @@ interface LayoutProps {
 
 const Layout: FC<LayoutProps> = ({ children, title }) => {
   const { isLoggedIn, onSignOut } = useUser();
-  console.log(isLoggedIn);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">

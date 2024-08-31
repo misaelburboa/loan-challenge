@@ -5,8 +5,11 @@ Amplify.configure({
   Auth: {
     Cognito: {
       // TODO: Add this to env vars
-      userPoolId: "us-east-1_tl26dBIVI",
-      userPoolClientId: "6mn5lrpnsfhpaojosbp6l6tal5",
+      userPoolId: "us-east-1_9BZJnVsSv",
+      userPoolClientId: "2eiucltijkkbqbjnugs64scurp",
+      loginWith: {
+        email: true,
+      },
     },
   },
 }, {

@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { FC, useState } from "react";
-import Layout from "@/components/Layout";
-import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik";
-import * as Yup from "yup";
-import axios from "axios";
+import { FC, useState } from "react"
+import Layout from "@/components/Layout"
+import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik"
+import * as Yup from "yup"
+import { fetchAuthSession } from "aws-amplify/auth"
 
 const AddPage: FC = () => {
-  const [result, setResult] = useState<number>(0);
+  const [result, setResult] = useState<number>(0)
 
   const formik = useFormik({
     initialValues: {
@@ -17,32 +17,31 @@ const AddPage: FC = () => {
       numbers: Yup.array().of(Yup.number().required("Required")),
     }),
     onSubmit: async (values) => {
-      console.log(values);
-      // Calculate the sum of all numbers
-      // const total = values.numbers.reduce((acc, num) => acc + num, 0);
-      // setResult(total);
-
-      const url =
-        "https://45qiqdh7m5.execute-api.us-east-1.amazonaws.com/dev/api/addition";
-
       try {
-        const response = await axios.post(
-          url,
-          { values: values.numbers },
+        const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
+
+        const result = await fetch(
+          "https://r0pqmqplj7.execute-api.us-east-1.amazonaws.com/prod/api/addition",
           {
+            method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
             },
+            body: JSON.stringify({
+              values: values.numbers,
+            }),
           }
-        );
+        )
 
-        return response.data.access_token;
-      } catch (error) {
-        console.error("Error getting token:", error);
-        throw error;
+        const { operationResponse } = await result.json()
+        
+        setResult(operationResponse)
+      } catch (e) {
+        console.log((e as Error).message)
       }
     },
-  });
+  })
 
   return (
     <Layout title="Add Numbers">
@@ -101,7 +100,7 @@ const AddPage: FC = () => {
         </div>
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default AddPage;
+export default AddPage
