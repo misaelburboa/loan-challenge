@@ -8,6 +8,7 @@ type OperationMethod = {
   resource: cdk.aws_apigateway.Resource
   httpMethod: string
   lambda: lambda.IFunction
+  needsAuthorizer: boolean
 }
 
 export class RestApiService extends Construct {
@@ -70,14 +71,23 @@ export class RestApiService extends Construct {
     return this.apiResource.addResource(resourceName)
   }
 
-  addMathOperationMethodWithAuthorizer({
+  addMathOperationMethod({
     resource,
     httpMethod,
     lambda,
+    needsAuthorizer,
   }: OperationMethod) {
-    resource.addMethod(httpMethod, new apigateway.LambdaIntegration(lambda), {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: this.authorizer,
-    })
+    const methodOptions: Record<string, any> = {}
+
+    if (needsAuthorizer) {
+      methodOptions.authorizationType = apigateway.AuthorizationType.COGNITO
+      methodOptions.authorizer = this.authorizer
+    }
+
+    resource.addMethod(
+      httpMethod,
+      new apigateway.LambdaIntegration(lambda),
+      methodOptions
+    )
   }
 }

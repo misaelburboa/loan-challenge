@@ -5,9 +5,12 @@ import Layout from "@/components/Layout"
 import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik"
 import * as Yup from "yup"
 import { fetchAuthSession } from "aws-amplify/auth"
+import { useUser } from "@/hooks/useUser"
 
 const AddPage: FC = () => {
   const [result, setResult] = useState<number>(0)
+
+  const { user } = useUser()
 
   const formik = useFormik({
     initialValues: {
@@ -18,25 +21,27 @@ const AddPage: FC = () => {
     }),
     onSubmit: async (values) => {
       try {
-        const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
+        console.log(user);
+        // const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
 
-        const result = await fetch(
-          "https://r0pqmqplj7.execute-api.us-east-1.amazonaws.com/prod/api/addition",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({
-              values: values.numbers,
-            }),
-          }
-        )
+        // const result = await fetch(
+        //   "https://dr1q2t3dla.execute-api.us-east-1.amazonaws.com/prod/api/addition",
+        //   {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //       Authorization: `Bearer ${authToken}`,
+        //     },
+        //     body: JSON.stringify({
+        //       values: values.numbers,
+        //       email: "cmburboa@gmail.com",
+        //     }),
+        //   }
+        // )
 
-        const { operationResponse } = await result.json()
-        
-        setResult(operationResponse)
+        // const { operationResponse } = await result.json()
+
+        // setResult(operationResponse)
       } catch (e) {
         console.log((e as Error).message)
       }
