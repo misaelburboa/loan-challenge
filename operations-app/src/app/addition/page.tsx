@@ -21,27 +21,26 @@ const AddPage: FC = () => {
     }),
     onSubmit: async (values) => {
       try {
-        console.log(user);
-        // const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
+        const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
 
-        // const result = await fetch(
-        //   "https://dr1q2t3dla.execute-api.us-east-1.amazonaws.com/prod/api/addition",
-        //   {
-        //     method: "POST",
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //       Authorization: `Bearer ${authToken}`,
-        //     },
-        //     body: JSON.stringify({
-        //       values: values.numbers,
-        //       email: "cmburboa@gmail.com",
-        //     }),
-        //   }
-        // )
+        const result = await fetch(
+          "https://dr1q2t3dla.execute-api.us-east-1.amazonaws.com/prod/api/addition",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              values: values.numbers,
+              email: "cmburboa@gmail.com",
+            }),
+          }
+        )
 
-        // const { operationResponse } = await result.json()
+        const { operationResponse } = await result.json()
 
-        // setResult(operationResponse)
+        setResult(operationResponse)
       } catch (e) {
         console.log((e as Error).message)
       }
