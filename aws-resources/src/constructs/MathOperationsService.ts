@@ -29,6 +29,8 @@ export class MathOperationsService extends Construct {
       maxWriteRequestUnits: 5,
     })
 
+    const DEFAULT_LAMBDA_TIMEOUT = 10;
+
     // Lambda Function for addition operation
     const additionFunction = new lambdaNodeJs.NodejsFunction(
       this,
@@ -37,6 +39,7 @@ export class MathOperationsService extends Construct {
         entry: path.join(lambdaDirectoryPath, "addition.ts"),
         handler: "addition",
         runtime: lambda.Runtime.NODEJS_20_X,
+        timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
         environment: {
           OPERATIONS_TABLE: operationsTable.tableName,
         },
@@ -51,6 +54,7 @@ export class MathOperationsService extends Construct {
         entry: path.join(lambdaDirectoryPath, "subtract.ts"),
         handler: "subtract",
         runtime: lambda.Runtime.NODEJS_20_X,
+        timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
         environment: {
           OPERATIONS_TABLE: operationsTable.tableName,
         },
@@ -65,7 +69,7 @@ export class MathOperationsService extends Construct {
         entry: path.join(lambdaDirectoryPath, "random-string.ts"),
         handler: "randomString",
         runtime: lambda.Runtime.NODEJS_20_X,
-        timeout: cdk.Duration.seconds(10),
+        timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
         environment: {
           OPERATIONS_TABLE: operationsTable.tableName,
           // This should be appended in some CI/CD process, but for the sake of the example is ok

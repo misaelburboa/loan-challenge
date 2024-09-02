@@ -1,34 +1,61 @@
-"use client";
+"use client"
 
-import { FC, useState } from "react";
-import Layout from "@/components/Layout";
-import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik";
-import * as Yup from "yup";
+import { FC, useState } from "react"
+import Layout from "@/components/Layout"
+import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik"
+import * as Yup from "yup"
+import { useFetcher } from "@/hooks/useFetcher"
+import { Cta } from "@/components/Cta"
 
-const Subtraction: FC = () => {
-  const [result, setResult] = useState<number | undefined>(undefined);
+type OperationFetcherParams = {
+  values: number[]
+}
+
+const AddPage: FC = () => {
+  const [result, setResult] = useState<string>()
+  const [message, setMessage] = useState<string>()
+
+  const onSuccess = (result: string) => {
+    setResult(result.toString())
+  }
+
+  const onFailure = (message: string) => {
+    setMessage(message)
+  }
+
+  const { fetcher, isLoading } = useFetcher<
+    OperationFetcherParams,
+    string,
+    string
+  >({
+    endpoint: "subtract",
+    onSuccess,
+    onFailure,
+  })
 
   const formik = useFormik({
     initialValues: {
-      numbers: [0],
+      numbers: [0], // Initialize with one number field
     },
     validationSchema: Yup.object({
       numbers: Yup.array().of(Yup.number().required("Required")),
     }),
-    onSubmit: (values) => {
-      // Calculate the sum of all numbers
-      const total = values.numbers.reduce((acc, num) => acc - num);
-      setResult(total);
+    onSubmit: async ({ numbers }) => {
+      setMessage("")
+      await fetcher({ values: numbers })
     },
-  });
+  })
 
   return (
-    <Layout title="Subtract Numbers">
+    <Layout title="Add Numbers">
       <div className="flex flex-col items-center md:justify-center min-h-screen bg-gray-100 p-4">
         <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
           <h1 className="text-2xl font-semibold text-center text-gray-900 mb-6">
             Subtract Numbers
           </h1>
+
+          <p className="pb-5 text-red-500">{message}</p>
+
           <FormikProvider value={formik}>
             <Form>
               <FieldArray name="numbers">
@@ -61,15 +88,11 @@ const Subtraction: FC = () => {
                 )}
               </FieldArray>
               <div className="text-center">
-                <button
-                  type="submit"
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  Calculate Subtraction
-                </button>
+                <Cta isLoading={isLoading} ctaText="Calculate" />
               </div>
             </Form>
-            {result ? (
+
+            {Number.isFinite(parseInt(result as string, 10)) ? (
               <div className="mt-4">
                 <p className="text-lg font-semibold mb-2">The result is:</p>
                 <div className="border p-4 rounded">{result}</div>
@@ -79,7 +102,7 @@ const Subtraction: FC = () => {
         </div>
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default Subtraction;
+export default AddPage

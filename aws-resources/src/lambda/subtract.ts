@@ -1,107 +1,83 @@
-import * as lambda from "aws-lambda";
-import * as dynamodb from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import * as lambda from "aws-lambda"
+import {
+  CustomResponse,
+  NotFoundException,
+  Operation,
+  PreconditionException,
+} from "../classes/Operation"
 
-type Operation = {
-  type: string;
-  cost: number;
-};
+const subtractOperation = (values: number[]) => {
+  const result = values.reduce((acc, value) => {
+    return acc - value
+  })
 
-type Record = {
-  id: string;
-  operation: string;
-  userId: number;
-  amount: number;
-  userBalance: number;
-  operationResponse: number;
-  date: number;
+  return result
 }
 
-const {
-  OPERATIONS_TABLE,
-  RECORDS_TABLE,
-} = process.env;
 
-if (!OPERATIONS_TABLE || !RECORDS_TABLE) {
-  throw new Error("Missing dynamodb environment variables");
+export class Subtract extends Operation {
+  constructor() {
+    super("subtract")
+  }
+
+  async executeOperation(body: string) {
+    const input = this.getInput(body)
+
+    const email = input.email
+    const params = input.params as { values: number[] }
+
+    const userConfig = await this.getUserConfig(email)
+
+    const operationConfig = await this.getOperationConfig(this.type, "1")
+
+    const operationResult = await this.makeOperation(
+      userConfig,
+      operationConfig.details.cost,
+      subtractOperation,
+      params.values
+    )
+
+    const operationRecord = {
+      pk: email,
+      sk: Date.now(),
+      details: {
+        operation_type: this.type,
+        amount: operationResult,
+        user_balance:
+          userConfig.details.user_balance - operationConfig.details.cost,
+      },
+    }
+
+    await this.saveOperation(operationRecord)
+
+    return operationResult
+  }
 }
 
-const dynamoDbClient = new dynamodb.DynamoDBClient({});
+const subtractInstance = new Subtract()
 
-export const subtract = async (
-  event: lambda.APIGatewayProxyEvent,
-  context: lambda.Context
-) => {
-  const OPERATION_TYPE = "subtraction";
-
+export const subtract = async (event: lambda.APIGatewayProxyEvent) => {
   try {
     if (!event.body) {
-      return {
-        statusCode: 400,
-      };
+      return new CustomResponse(400, { message: "No body provided" })
     }
 
-    const values =
-      (JSON.parse(event.body) as { values?: number[] })?.values || [];
+    const operationResult = await subtractInstance.executeOperation(event.body)
 
-    if (values.length === 0) {
-      return {
-        statusCode: 400,
-      };
-    }
-
-    const operationResult = values.reduce((acc, value) => {
-      return acc - value;
-    });
-
-    const command = new dynamodb.GetItemCommand({
-      TableName: OPERATIONS_TABLE,
-      Key: {
-        type: {
-          S: OPERATION_TYPE,
-        },
-      },
-    });
-
-    const response = await dynamoDbClient.send(command);
-
-    if (!response.Item) {
-      return {
-        statusCode: 404,
-        message: "Operation not found",
-      };
-    }
-
-    const operation = unmarshall(response.Item) as Operation;
-
-    // TODO: Manage the credits
-    const userCredits = 10;
-
-    const operationRecord: Record = {
-      id: context.awsRequestId,
-      operation: operation.type,
-      userId: 14,
-      amount: operation.cost,
-      userBalance: userCredits - operation.cost,
-      operationResponse: operationResult,
-      date: Date.now(),
-    };
-
-    const recordCommand = new dynamodb.PutItemCommand({
-      TableName: RECORDS_TABLE,
-      Item: marshall(operationRecord),
-    });
-
-    await dynamoDbClient.send(recordCommand);
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(operationRecord),
-    };
+    return new CustomResponse(200, { result: operationResult })
   } catch (e) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify(e),
-    };
+    if (e instanceof PreconditionException) {
+      return new CustomResponse(PreconditionException.NUMBER_CODE, {
+        message: e.message,
+      })
+    }
+
+    if (e instanceof NotFoundException) {
+      return new CustomResponse(NotFoundException.NUMBER_CODE, {
+        message: e.message,
+      })
+    }
+
+    return new CustomResponse(500, { message: (e as Error).message })
   }
-};
+}
