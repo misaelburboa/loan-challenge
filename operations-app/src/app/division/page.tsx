@@ -1,35 +1,50 @@
-"use client";
+"use client"
 
-import { FC, useState } from "react";
-import Layout from "@/components/Layout";
-import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik";
-import * as Yup from "yup";
+import { FC, useState } from "react"
+import Layout from "@/components/Layout"
+import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik"
+import * as Yup from "yup"
+import { useFetcher } from "@/hooks/useFetcher"
+import { Cta } from "@/components/Cta"
+
+type OperationFetcherParams = {
+  values: number[]
+}
 
 const DividePage: FC = () => {
-  const [result, setResult] = useState<number | string>("");
+  const [result, setResult] = useState<string>()
+  const [message, setMessage] = useState<string>()
+
+  const onSuccess = (result: string) => {
+    setResult(result.toString())
+  }
+
+  const onFailure = (message: string) => {
+    setMessage(message)
+  }
+
+  const { fetcher, isLoading } = useFetcher<
+    OperationFetcherParams,
+    string,
+    string
+  >({
+    endpoint: "division",
+    onSuccess,
+    onFailure,
+  })
 
   const formik = useFormik({
     initialValues: {
-      numbers: [1, 1], // Initialize with two fields to avoid division by zero
+      numbers: [1, 1], // Initialize with one number field
     },
     validationSchema: Yup.object({
       numbers: Yup.array().of(Yup.number().required("Required")),
     }),
-    onSubmit: (values) => {
-      const { numbers } = values;
-      if (numbers.length === 0) return setResult("No numbers to divide");
-      
-      let total = numbers[0];
-      for (let i = 1; i < numbers.length; i++) {
-        if (numbers[i] === 0) {
-          setResult("Cannot divide by zero");
-          return;
-        }
-        total /= numbers[i];
-      }
-      setResult(total);
+    onSubmit: async ({ numbers }) => {
+      setMessage("")
+      await fetcher({ values: numbers })
     },
-  });
+  })
 
   return (
     <Layout title="Divide Numbers">
@@ -38,6 +53,9 @@ const DividePage: FC = () => {
           <h1 className="text-2xl font-semibold text-center text-gray-900 mb-6">
             Divide Numbers
           </h1>
+
+          <p className="pb-5 text-red-500">{message}</p>
+
           <FormikProvider value={formik}>
             <Form>
               <FieldArray name="numbers">
@@ -61,7 +79,7 @@ const DividePage: FC = () => {
                     ))}
                     <button
                       type="button"
-                      onClick={() => push(1)} // Initialize new field with 1 to avoid zero
+                      onClick={() => push(0)}
                       className="w-full px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
                     >
                       Add Number Field
@@ -70,25 +88,21 @@ const DividePage: FC = () => {
                 )}
               </FieldArray>
               <div className="text-center">
-                <button
-                  type="submit"
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  Calculate Division
-                </button>
+                <Cta isLoading={isLoading} ctaText="Calculate" />
               </div>
             </Form>
-            {result !== "" && (
+
+            {Number.isFinite(parseInt(result as string, 10)) ? (
               <div className="mt-4">
                 <p className="text-lg font-semibold mb-2">The result is:</p>
                 <div className="border p-4 rounded">{result}</div>
               </div>
-            )}
+            ) : undefined}
           </FormikProvider>
         </div>
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default DividePage;
+export default DividePage

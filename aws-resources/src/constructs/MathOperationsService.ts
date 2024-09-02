@@ -29,7 +29,7 @@ export class MathOperationsService extends Construct {
       maxWriteRequestUnits: 5,
     })
 
-    const DEFAULT_LAMBDA_TIMEOUT = 10;
+    const DEFAULT_LAMBDA_TIMEOUT = 10
 
     // Lambda Function for addition operation
     const additionFunction = new lambdaNodeJs.NodejsFunction(
@@ -76,6 +76,21 @@ export class MathOperationsService extends Construct {
       }
     )
 
+    // Lambda Function for division operation
+    const divisionFunction = new lambdaNodeJs.NodejsFunction(
+      this,
+      "DivisionFunction",
+      {
+        entry: path.join(lambdaDirectoryPath, "division.ts"),
+        handler: "division",
+        runtime: lambda.Runtime.NODEJS_20_X,
+        timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
+        environment: {
+          OPERATIONS_TABLE: operationsTable.tableName,
+        },
+      }
+    )
+
     // Lambda Function for random string operation
     const randomStringFunction = new lambdaNodeJs.NodejsFunction(
       this,
@@ -99,6 +114,7 @@ export class MathOperationsService extends Construct {
     operationsTable.grantReadWriteData(additionFunction)
     operationsTable.grantReadWriteData(subtractionFunction)
     operationsTable.grantReadWriteData(multiplicationFunction)
+    operationsTable.grantReadWriteData(divisionFunction)
     operationsTable.grantReadWriteData(randomStringFunction)
 
     const restApi = new RestApiService(this, "RestApiService")
@@ -127,6 +143,15 @@ export class MathOperationsService extends Construct {
       resource: multiplyResource,
       httpMethod: "POST",
       lambda: multiplicationFunction,
+      needsAuthorizer: true,
+    })
+
+    // Division API GW Resource
+    const divisionResource = restApi.addMathOperationResource("division")
+    restApi.addMathOperationMethod({
+      resource: divisionResource,
+      httpMethod: "POST",
+      lambda: divisionFunction,
       needsAuthorizer: true,
     })
 
