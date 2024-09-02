@@ -1,53 +1,34 @@
-"use client";
+"use client"
 
-import { FC, useState } from "react";
-import Layout from "@/components/Layout";
-import { useFormik, FormikProvider, Form, Field } from "formik";
-import * as Yup from "yup";
-import axios from "axios";
-import { Cta } from "@/components/Cta";
-import { useFetcher } from "@/hooks/useFetcher";
+import { FC, useState } from "react"
+import Layout from "@/components/Layout"
+import { useFormik, FormikProvider, Form, Field } from "formik"
+import * as Yup from "yup"
+import { Cta } from "@/components/Cta"
+import { useFetcher } from "@/hooks/useFetcher"
 
-// const fetchRandomStrings = async (numStrings = 10, length = 8): Promise<string[]> => {
-//   try {
-//     // TODO: include this to the .env variables
-//     const apiKey = "df5ca201-d5d2-4e01-ad75-89fcd049a38f";
-
-//     const url = `https://api.random.org/json-rpc/4/invoke`;
-
-//     const response = await axios.post(url, {
-//       jsonrpc: "2.0",
-//       method: "generateStrings",
-//       params: {
-//         apiKey: apiKey,
-//         n: numStrings,
-//         length: length,
-//         characters:
-//           "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-//         replacement: true,
-//       },
-//       id: 1,
-//     });
-
-//     return response.data.result.random.data;
-//   } catch (error) {
-//     console.error("Error fetching random strings:", error);
-//     throw error;
-//   }
-// };
+type RandomStringFetcherParams = {
+  num: number
+  len: number
+}
 
 const CustomOptionsPage: FC = () => {
-  const [result, setResult] = useState<string>()
+  const [result, setResult] = useState<string[]>([])
   const [message, setMessage] = useState<string>()
 
-  const onSuccess = (result: string) => {
+  const onSuccess = (result: string[]) => {
+    console.log(result);
     setResult(result)
   }
   const onFailure = (message: string) => {
     setMessage(message)
   }
 
-  const { fetcher, isLoading } = useFetcher({
+  const { fetcher, isLoading } = useFetcher<
+    RandomStringFetcherParams,
+    string[],
+    string
+  >({
     endpoint: "random-str",
     onSuccess,
     onFailure,
@@ -69,15 +50,10 @@ const CustomOptionsPage: FC = () => {
         .min(0, "Cannot be negative"),
     }),
     onSubmit: async (values) => {
-      const { num, len } = values;
-
       setMessage("")
       await fetcher(values)
-
-      // const randomStrings = await fetchRandomStrings(num, len);
-      // setResult(randomStrings);
     },
-  });
+  })
 
   return (
     <Layout title="Random String">
@@ -119,21 +95,23 @@ const CustomOptionsPage: FC = () => {
                 <Cta isLoading={isLoading} ctaText="Generate String" />
               </div>
             </Form>
-            {/* {result?.length > 0 && (
+            {result?.length > 0 && (
               <div className="mt-4">
-                <p className="text-lg font-semibold mb-2">Here you have your strings:</p>
-                <div className="border p-4 rounded">{
-                  result.map(str => (
+                <p className="text-lg font-semibold mb-2">
+                  Here you have your strings:
+                </p>
+                <div className="border p-4 rounded">
+                  {result.map((str) => (
                     <div key={str}>{str}</div>
-                  ))
-                }</div>
+                  ))}
+                </div>
               </div>
-            )} */}
+            )}
           </FormikProvider>
         </div>
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default CustomOptionsPage;
+export default CustomOptionsPage

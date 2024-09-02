@@ -16,14 +16,18 @@ const AddPage: FC = () => {
   const [message, setMessage] = useState<string>()
 
   const onSuccess = (result: string) => {
-    setResult(result)
+    setResult(result.toString())
   }
 
   const onFailure = (message: string) => {
     setMessage(message)
   }
 
-  const { fetcher, isLoading } = useFetcher<OperationFetcherParams>({
+  const { fetcher, isLoading } = useFetcher<
+    OperationFetcherParams,
+    string,
+    string
+  >({
     endpoint: "addition",
     onSuccess,
     onFailure,

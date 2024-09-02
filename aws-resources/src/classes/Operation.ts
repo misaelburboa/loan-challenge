@@ -84,8 +84,6 @@ export type RequestParams<T> = {
 
 type OperationFunction = (values: number[]) => number
 
-type RandomStringGenerator = (params: { num: number; len: number }) => string
-
 const { OPERATIONS_TABLE } = process.env
 
 export class Operation {

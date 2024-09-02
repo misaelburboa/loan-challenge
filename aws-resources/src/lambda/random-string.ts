@@ -16,8 +16,47 @@ export class RandomString extends Operation {
     super("random-str")
   }
 
-  async generateRandomString(params: { num: number; len: number }) {
-    return "MisaYoullgetit"
+  async generateRandomString({ num, len }: { num: number; len: number }) {
+    const url = process.env.RANDOM_STRING_API_ENDPOINT as string
+    const apiKey = process.env.RANDOM_STRING_API_KEY as string
+
+    const requestBody = {
+      jsonrpc: "2.0",
+      method: "generateStrings",
+      params: {
+        apiKey: apiKey,
+        n: num,
+        length: len,
+        characters:
+          "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        replacement: true,
+      },
+      id: 1,
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) {
+        const errorDetails = await response.text()
+        const errorMessage = JSON.parse(errorDetails).message
+
+        throw new Error(errorMessage)
+      }
+
+      const { result } = await response.json()
+
+      return result.random.data
+    } catch (error) {
+      console.error("Error fetching random strings data:", error)
+      throw error
+    }
   }
 
   async executeOperation(body: string) {
@@ -33,10 +72,11 @@ export class RandomString extends Operation {
       const userConfig = await this.getUserConfig(email)
 
       const operationConfig = await this.getOperationConfig(this.type, "1")
+      const operationCost = operationConfig.details.cost
 
-      this.validateUserCredits(userConfig, operationConfig.details.cost)
+      this.validateUserCredits(userConfig, operationCost)
 
-      const generatedString = await this.generateRandomString(
+      const generatedStrings = await this.generateRandomString(
         params as RandomStringParams
       )
 
@@ -45,15 +85,17 @@ export class RandomString extends Operation {
         sk: Date.now(),
         details: {
           operation_type: this.type,
-          stringGenerated: generatedString,
+          stringsGenerated: generatedStrings,
           user_balance:
             userConfig.details.user_balance - operationConfig.details.cost,
         },
       }
 
+      this.updateUserCredit(userConfig, operationCost)
+
       await this.saveOperation(operationRecord)
 
-      return new CustomResponse(200, { result: generatedString })
+      return generatedStrings
     } catch (e) {
       if (e instanceof PreconditionException) {
         return new CustomResponse(PreconditionException.NUMBER_CODE, {

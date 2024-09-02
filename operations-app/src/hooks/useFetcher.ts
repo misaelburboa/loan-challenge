@@ -1,24 +1,34 @@
 import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth"
 import { useState } from "react"
 
-type FetcherParams = {
+type FetcherParams<OnSuccessResultPrams, OnFailureResultPrams> = {
   endpoint: string
-  onSuccess: (result: string) => void
-  onFailure: (message: string) => void
+  onSuccess: (result: OnSuccessResultPrams) => void
+  onFailure: (message: OnFailureResultPrams) => void
 }
 
-type Fetcher<P> = (params: P) => void
+type Fetcher<Parameters> = (params: Parameters) => void
 
-type UseFetcherReturnObject<P> = { fetcher: Fetcher<P>; isLoading: boolean }
+type UseFetcherReturnObject<Parameters> = {
+  fetcher: Fetcher<Parameters>
+  isLoading: boolean
+}
 
-export const useFetcher = <P>({
+export const useFetcher = <
+  Parameters,
+  OnSuccessResultPrams,
+  OnFailureResultPrams
+>({
   endpoint,
   onSuccess,
   onFailure,
-}: FetcherParams): UseFetcherReturnObject<P> => {
+}: FetcherParams<
+  OnSuccessResultPrams,
+  OnFailureResultPrams
+>): UseFetcherReturnObject<Parameters> => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  const fetcher: Fetcher<P> = async (params: P) => {
+  const fetcher: Fetcher<Parameters> = async (params: Parameters) => {
     const { signInDetails } = await getCurrentUser()
 
     try {
@@ -49,7 +59,7 @@ export const useFetcher = <P>({
 
       const data = await response.json()
 
-      onSuccess(data.result.toString())
+      onSuccess(data.result)
 
       setIsLoading(false)
     } catch (e) {}

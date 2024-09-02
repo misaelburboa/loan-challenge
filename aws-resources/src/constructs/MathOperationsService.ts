@@ -57,9 +57,29 @@ export class MathOperationsService extends Construct {
       }
     )
 
+    // Lambda Function for subtract operation
+    const randomStringFunction = new lambdaNodeJs.NodejsFunction(
+      this,
+      "RandomStringFunction",
+      {
+        entry: path.join(lambdaDirectoryPath, "random-string.ts"),
+        handler: "randomString",
+        runtime: lambda.Runtime.NODEJS_20_X,
+        timeout: cdk.Duration.seconds(10),
+        environment: {
+          OPERATIONS_TABLE: operationsTable.tableName,
+          // This should be appended in some CI/CD process, but for the sake of the example is ok
+          RANDOM_STRING_API_KEY: "df5ca201-d5d2-4e01-ad75-89fcd049a38f",
+          RANDOM_STRING_API_ENDPOINT:
+            "https://api.random.org/json-rpc/4/invoke",
+        },
+      }
+    )
+
     // Grant read and write access to the Dynamo tables
     operationsTable.grantReadWriteData(additionFunction)
     operationsTable.grantReadWriteData(subtractFunction)
+    operationsTable.grantReadWriteData(randomStringFunction)
 
     const restApi = new RestApiService(this, "RestApiService")
 
@@ -69,7 +89,7 @@ export class MathOperationsService extends Construct {
       resource: additionResource,
       httpMethod: "POST",
       lambda: additionFunction,
-      needsAuthorizer: true
+      needsAuthorizer: true,
     })
 
     // Substract API GW Resource
@@ -78,7 +98,16 @@ export class MathOperationsService extends Construct {
       resource: subtractResource,
       httpMethod: "POST",
       lambda: subtractFunction,
-      needsAuthorizer: true
+      needsAuthorizer: true,
+    })
+
+    // Random Str API GW Resource
+    const randomStrResource = restApi.addMathOperationResource("random-str")
+    restApi.addMathOperationMethod({
+      resource: randomStrResource,
+      httpMethod: "POST",
+      lambda: randomStringFunction,
+      needsAuthorizer: true,
     })
   }
 }
