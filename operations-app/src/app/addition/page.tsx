@@ -4,13 +4,30 @@ import { FC, useState } from "react"
 import Layout from "@/components/Layout"
 import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik"
 import * as Yup from "yup"
-import { fetchAuthSession } from "aws-amplify/auth"
-import { useUser } from "@/hooks/useUser"
+import { useFetcher } from "@/hooks/useFetcher"
+import { Cta } from "@/components/Cta"
+
+type OperationFetcherParams = {
+  values: number[]
+}
 
 const AddPage: FC = () => {
-  const [result, setResult] = useState<number>(0)
+  const [result, setResult] = useState<string>()
+  const [message, setMessage] = useState<string>()
 
-  const { user } = useUser()
+  const onSuccess = (result: string) => {
+    setResult(result)
+  }
+
+  const onFailure = (message: string) => {
+    setMessage(message)
+  }
+
+  const { fetcher, isLoading } = useFetcher<OperationFetcherParams>({
+    endpoint: "addition",
+    onSuccess,
+    onFailure,
+  })
 
   const formik = useFormik({
     initialValues: {
@@ -19,31 +36,9 @@ const AddPage: FC = () => {
     validationSchema: Yup.object({
       numbers: Yup.array().of(Yup.number().required("Required")),
     }),
-    onSubmit: async (values) => {
-      try {
-        const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
-
-        const result = await fetch(
-          "https://dr1q2t3dla.execute-api.us-east-1.amazonaws.com/prod/api/addition",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({
-              values: values.numbers,
-              email: "cmburboa@gmail.com",
-            }),
-          }
-        )
-
-        const { operationResponse } = await result.json()
-
-        setResult(operationResponse)
-      } catch (e) {
-        console.log((e as Error).message)
-      }
+    onSubmit: async ({ numbers }) => {
+      setMessage("")
+      await fetcher({ values: numbers })
     },
   })
 
@@ -54,6 +49,9 @@ const AddPage: FC = () => {
           <h1 className="text-2xl font-semibold text-center text-gray-900 mb-6">
             Add Numbers
           </h1>
+
+          <p className="pb-5 text-red-500">{message}</p>
+
           <FormikProvider value={formik}>
             <Form>
               <FieldArray name="numbers">
@@ -86,15 +84,11 @@ const AddPage: FC = () => {
                 )}
               </FieldArray>
               <div className="text-center">
-                <button
-                  type="submit"
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  Calculate Sum
-                </button>
+                <Cta isLoading={isLoading} ctaText="Calculate" />
               </div>
             </Form>
-            {result > 0 ? (
+
+            {Number.isFinite(parseInt(result as string, 10)) ? (
               <div className="mt-4">
                 <p className="text-lg font-semibold mb-2">The result is:</p>
                 <div className="border p-4 rounded">{result}</div>

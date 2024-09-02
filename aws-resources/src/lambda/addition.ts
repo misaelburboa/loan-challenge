@@ -1,179 +1,59 @@
 import * as lambda from "aws-lambda"
-import * as dynamodb from "@aws-sdk/client-dynamodb"
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb"
+import {
+  CustomResponse,
+  NotFoundException,
+  Operation,
+  PreconditionException,
+} from "../classes/Operation"
 
-class PreconditionException extends Error {
-  static NUMBER_CODE = 412
-
-  public statusCode: number
-  public message: string
-
-  constructor(message: string) {
-    super(message)
-    this.name = "NotFoundException"
-    this.statusCode = 412
-    this.message = message
-    Object.setPrototypeOf(this, PreconditionException.prototype)
-  }
-}
-
-class NotFoundException extends Error {
-  static NUMBER_CODE = 404
-
-  public statusCode: number
-  public message: string
-
-  constructor(message: string) {
-    super(message)
-    this.name = "NotFoundException"
-    this.statusCode = 404
-    this.message = message
-    Object.setPrototypeOf(this, NotFoundException.prototype)
-  }
-}
-
-class CustomResponse {
-  public statusCode
-  public body
-  public headers
-
-  constructor(
-    statusCode: number,
-    body?: object,
-    headers?: Record<string, string>
-  ) {
-    this.statusCode = statusCode
-    this.body = JSON.stringify(body)
-    this.headers = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Controll-Allow-Headers": "*",
-      "Access-Control-Allow-Methods": "*",
-      ...headers,
-    }
-  }
-}
-
-type OperationConfig = {
-  pk: string
-  sk: string
-  details: {
-    cost: number
-  }
-}
-
-type UserConfig = {
-  details: {
-    status: "active" | "inactive"
-    user_balance: number
-  }
-}
-
-type RecordItem = {
-  pk: string
-  sk: number
-  details: {
-    amount: number
-    operation_type: string
-    user_balance: number
-  }
-}
-
-type RequestParams = {
-  values: number[]
-  email: string
-}
-
-const { OPERATIONS_TABLE } = process.env
-
-if (!OPERATIONS_TABLE) {
-  throw new Error("Missing dynamodb environment variables")
-}
-
-const dynamoDbClient = new dynamodb.DynamoDBClient({})
-
-const getInput = (input: string): RequestParams => {
-  try {
-    const { values, email } = JSON.parse(input) as RequestParams
-
-    if (values.length < 1 || !email) {
-      throw new PreconditionException("Incorrect input provided")
-    }
-
-    return {
-      values,
-      email,
-    }
-  } catch (error) {
-    throw error
-  }
-}
-
-const getUserConfig = async (email: string): Promise<UserConfig> => {
-  try {
-    const command = new dynamodb.GetItemCommand({
-      TableName: OPERATIONS_TABLE,
-      Key: {
-        pk: { S: `user#${email}` },
-        sk: { N: "2" },
-      },
-    })
-
-    const response = await dynamoDbClient.send(command)
-
-    if (!response.Item) {
-      throw new NotFoundException("User not found")
-    }
-
-    return unmarshall(response.Item) as UserConfig
-  } catch (error) {
-    throw error
-  }
-}
-
-const getOperationConfig = async (operation: string) => {
-  const command = new dynamodb.GetItemCommand({
-    TableName: OPERATIONS_TABLE,
-    Key: {
-      pk: { S: operation },
-      sk: { N: "1" },
-    },
-  })
-
-  const response = await dynamoDbClient.send(command)
-
-  if (!response.Item) {
-    throw new NotFoundException("Operation not found")
-  }
-
-  return unmarshall(response.Item) as OperationConfig
-}
-
-const makeOperation = (userConfig: UserConfig, values: number[]): number => {
-  const currentCredits = userConfig.details.user_balance
-
-  if (currentCredits < 1) {
-    throw new PreconditionException(
-      "User has not credit to perform this operation"
-    )
-  }
-
-  return values.reduce((acc, value) => {
+const additionOperation = (values: number[]) => {
+  const result = values.reduce((acc, value) => {
     return acc + value
   }, 0)
+
+  return result
 }
 
-const saveOperation = async (record: RecordItem) => {
-  try {
-    const recordCommand = new dynamodb.PutItemCommand({
-      TableName: OPERATIONS_TABLE,
-      Item: marshall(record),
-    })
+export class Addition extends Operation {
+  constructor() {
+    super("addition")
+  }
 
-    return await dynamoDbClient.send(recordCommand)
-  } catch (error) {
-    throw error
+  async executeOperation(body: string) {
+    const input = this.getInput(body)
+
+    const email = input.email
+    const params = input.params as { values: number[] }
+
+    const userConfig = await this.getUserConfig(email)
+
+    const operationConfig = await this.getOperationConfig(this.type, "1")
+
+    const operationResult = await this.makeOperation(
+      userConfig,
+      operationConfig.details.cost,
+      additionOperation,
+      params.values
+    )
+
+    const operationRecord = {
+      pk: email,
+      sk: Date.now(),
+      details: {
+        operation_type: this.type,
+        amount: operationResult,
+        user_balance:
+          userConfig.details.user_balance - operationConfig.details.cost,
+      },
+    }
+
+    await this.saveOperation(operationRecord)
+
+    return operationResult
   }
 }
+
+const additionInstance = new Addition()
 
 export const addition = async (event: lambda.APIGatewayProxyEvent) => {
   try {
@@ -181,26 +61,7 @@ export const addition = async (event: lambda.APIGatewayProxyEvent) => {
       return new CustomResponse(400, { message: "No body provided" })
     }
 
-    const { values, email } = getInput(event.body)
-
-    const userConfig = await getUserConfig(email)
-
-    const operationConfig = await getOperationConfig("addition")
-
-    const operationResult = makeOperation(userConfig, values)
-
-    const operationRecord = {
-      pk: email,
-      sk: Date.now(),
-      details: {
-        operation_type: "addition",
-        amount: operationResult,
-        user_balance:
-          userConfig.details.user_balance - operationConfig.details.cost,
-      },
-    }
-
-    await saveOperation(operationRecord)
+    const operationResult = await additionInstance.executeOperation(event.body)
 
     return new CustomResponse(200, { result: operationResult })
   } catch (e) {
