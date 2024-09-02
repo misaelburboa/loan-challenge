@@ -1,12 +1,37 @@
-"use client";
+"use client"
 
-import { FC, useState } from "react";
-import Layout from "@/components/Layout";
-import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik";
-import * as Yup from "yup";
+import { FC, useState } from "react"
+import Layout from "@/components/Layout"
+import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik"
+import * as Yup from "yup"
+import { useFetcher } from "@/hooks/useFetcher"
+import { Cta } from "@/components/Cta"
+
+type OperationFetcherParams = {
+  values: number[]
+}
 
 const MultiplyPage: FC = () => {
-  const [result, setResult] = useState<number>(0);
+  const [result, setResult] = useState<string>()
+  const [message, setMessage] = useState<string>()
+
+  const onSuccess = (result: string) => {
+    setResult(result.toString())
+  }
+
+  const onFailure = (message: string) => {
+    setMessage(message)
+  }
+
+  const { fetcher, isLoading } = useFetcher<
+    OperationFetcherParams,
+    string,
+    string
+  >({
+    endpoint: "multiplication",
+    onSuccess,
+    onFailure,
+  })
 
   const formik = useFormik({
     initialValues: {
@@ -15,12 +40,11 @@ const MultiplyPage: FC = () => {
     validationSchema: Yup.object({
       numbers: Yup.array().of(Yup.number().required("Required")),
     }),
-    onSubmit: (values) => {
-      console.log("ASDASD")
-      const total = values.numbers.reduce((acc, num) => acc * num, 1);
-      setResult(total);
+    onSubmit: async ({ numbers }) => {
+      setMessage("")
+      await fetcher({ values: numbers })
     },
-  });
+  })
 
   return (
     <Layout title="Multiply Numbers">
@@ -29,6 +53,9 @@ const MultiplyPage: FC = () => {
           <h1 className="text-2xl font-semibold text-center text-gray-900 mb-6">
             Multiply Numbers
           </h1>
+
+          <p className="pb-5 text-red-500">{message}</p>
+
           <FormikProvider value={formik}>
             <Form>
               <FieldArray name="numbers">
@@ -61,15 +88,11 @@ const MultiplyPage: FC = () => {
                 )}
               </FieldArray>
               <div className="text-center">
-                <button
-                  type="submit"
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  Calculate Multiplication
-                </button>
+                <Cta isLoading={isLoading} ctaText="Calculate" />
               </div>
             </Form>
-            {result > 0 ? (
+
+            {Number.isFinite(parseInt(result as string, 10)) ? (
               <div className="mt-4">
                 <p className="text-lg font-semibold mb-2">The result is:</p>
                 <div className="border p-4 rounded">{result}</div>
@@ -79,7 +102,7 @@ const MultiplyPage: FC = () => {
         </div>
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default MultiplyPage;
+export default MultiplyPage

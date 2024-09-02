@@ -46,13 +46,13 @@ export class MathOperationsService extends Construct {
       }
     )
 
-    // Lambda Function for subtract operation
-    const subtractFunction = new lambdaNodeJs.NodejsFunction(
+    // Lambda Function for subtraction operation
+    const subtractionFunction = new lambdaNodeJs.NodejsFunction(
       this,
-      "SubtractFunction",
+      "SubtractionFunction",
       {
-        entry: path.join(lambdaDirectoryPath, "subtract.ts"),
-        handler: "subtract",
+        entry: path.join(lambdaDirectoryPath, "subtraction.ts"),
+        handler: "subtraction",
         runtime: lambda.Runtime.NODEJS_20_X,
         timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
         environment: {
@@ -61,7 +61,22 @@ export class MathOperationsService extends Construct {
       }
     )
 
-    // Lambda Function for subtract operation
+    // Lambda Function for multiply operation
+    const multiplicationFunction = new lambdaNodeJs.NodejsFunction(
+      this,
+      "MultiplicationFunction",
+      {
+        entry: path.join(lambdaDirectoryPath, "multiplication.ts"),
+        handler: "multiplication",
+        runtime: lambda.Runtime.NODEJS_20_X,
+        timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
+        environment: {
+          OPERATIONS_TABLE: operationsTable.tableName,
+        },
+      }
+    )
+
+    // Lambda Function for random string operation
     const randomStringFunction = new lambdaNodeJs.NodejsFunction(
       this,
       "RandomStringFunction",
@@ -82,7 +97,8 @@ export class MathOperationsService extends Construct {
 
     // Grant read and write access to the Dynamo tables
     operationsTable.grantReadWriteData(additionFunction)
-    operationsTable.grantReadWriteData(subtractFunction)
+    operationsTable.grantReadWriteData(subtractionFunction)
+    operationsTable.grantReadWriteData(multiplicationFunction)
     operationsTable.grantReadWriteData(randomStringFunction)
 
     const restApi = new RestApiService(this, "RestApiService")
@@ -97,11 +113,20 @@ export class MathOperationsService extends Construct {
     })
 
     // Substract API GW Resource
-    const subtractResource = restApi.addMathOperationResource("subtract")
+    const subtractionResource = restApi.addMathOperationResource("subtraction")
     restApi.addMathOperationMethod({
-      resource: subtractResource,
+      resource: subtractionResource,
       httpMethod: "POST",
-      lambda: subtractFunction,
+      lambda: subtractionFunction,
+      needsAuthorizer: true,
+    })
+
+    // Multiplication API GW Resource
+    const multiplyResource = restApi.addMathOperationResource("multiplication")
+    restApi.addMathOperationMethod({
+      resource: multiplyResource,
+      httpMethod: "POST",
+      lambda: multiplicationFunction,
       needsAuthorizer: true,
     })
 

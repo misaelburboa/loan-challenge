@@ -6,18 +6,17 @@ import {
   PreconditionException,
 } from "../classes/Operation"
 
-const subtractOperation = (values: number[]) => {
+const multiplyOperation = (values: number[]) => {
   const result = values.reduce((acc, value) => {
-    return acc - value
+    return acc * value
   })
 
   return result
 }
 
-
-export class Subtract extends Operation {
+export class Multiplication extends Operation {
   constructor() {
-    super("subtract")
+    super("multiplication")
   }
 
   async executeOperation(body: string) {
@@ -33,7 +32,7 @@ export class Subtract extends Operation {
     const operationResult = await this.makeOperation(
       userConfig,
       operationConfig.details.cost,
-      subtractOperation,
+      multiplyOperation,
       params.values
     )
 
@@ -54,15 +53,15 @@ export class Subtract extends Operation {
   }
 }
 
-const subtractInstance = new Subtract()
+const multiplicationInstance = new Multiplication()
 
-export const subtract = async (event: lambda.APIGatewayProxyEvent) => {
+export const multiplication = async (event: lambda.APIGatewayProxyEvent) => {
   try {
     if (!event.body) {
       return new CustomResponse(400, { message: "No body provided" })
     }
 
-    const operationResult = await subtractInstance.executeOperation(event.body)
+    const operationResult = await multiplicationInstance.executeOperation(event.body)
 
     return new CustomResponse(200, { result: operationResult })
   } catch (e) {

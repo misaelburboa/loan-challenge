@@ -1,2 +1,2 @@
 export * from "./addition";
-export * from "./subtract";
+export * from "./subtraction";

@@ -11,7 +11,7 @@ type OperationFetcherParams = {
   values: number[]
 }
 
-const AddPage: FC = () => {
+const Subtraction: FC = () => {
   const [result, setResult] = useState<string>()
   const [message, setMessage] = useState<string>()
 
@@ -28,7 +28,7 @@ const AddPage: FC = () => {
     string,
     string
   >({
-    endpoint: "subtract",
+    endpoint: "subtraction",
     onSuccess,
     onFailure,
   })
@@ -47,7 +47,7 @@ const AddPage: FC = () => {
   })
 
   return (
-    <Layout title="Add Numbers">
+    <Layout title="Subtract Numbers">
       <div className="flex flex-col items-center md:justify-center min-h-screen bg-gray-100 p-4">
         <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
           <h1 className="text-2xl font-semibold text-center text-gray-900 mb-6">
@@ -105,4 +105,4 @@ const AddPage: FC = () => {
   )
 }
 
-export default AddPage
+export default Subtraction
