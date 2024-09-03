@@ -41,7 +41,6 @@ const Sqrt: FC = () => {
       numbers: Yup.number().required("Required").min(0, "Cannot be negative"),
     }),
     onSubmit: async ({ numbers }) => {
-      console.log(numbers)
       setMessage("")
       await fetcher({ values: numbers })
     },

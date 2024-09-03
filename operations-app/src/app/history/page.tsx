@@ -1,212 +1,135 @@
-"use client";
+"use client"
 
-import React, { FC, useState, useEffect } from "react";
-import {
-  useTable,
-  usePagination,
-  useSortBy,
-  useGlobalFilter,
-} from "react-table";
-import axios from "axios";
-import { useRouter } from "next/router";
-import Layout from "@/components/Layout";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react"
+import DataTable from "./DataTable" // Import the DataTable component
+import { fetchAuthSession } from "aws-amplify/auth"
+import Layout from "@/components/Layout"
 
-interface Operation {
-  id: number;
-  name: string;
-  date: string;
-  amount: number;
+type HistoryRecord = {
+  id: number
+  type: string
+  result: string
+  user_balance: number
+  date: string
+  timestamp: number
 }
 
-const OperationsPage: FC = () => {
-  const [data, setData] = useState<Operation[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [globalFilter, setGlobalFilter] = useState<string>("");
-  const [pageSize, setPageSize] = useState<number>(10); // Single declaration of pageSize
+const History: React.FC = () => {
+  const nextPageRef = useRef<string>("")
 
-  const fetchOperations = async () => {
-    try {
-      setLoading(true);
-
-      // TODO: Make this endpoint available
-      const response = await axios.get("/api/operations");
-      setData(response.data);
-    } catch (error) {
-      console.error("Error fetching operations:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [data, setData] = useState<HistoryRecord[]>([])
+  const [limit, setLimit] = useState<number>(10)
+  const [nextPage, setNextPage] = useState<string>("")
 
   useEffect(() => {
-    fetchOperations();
-  }, []);
+    console.log("USEEFF")
+    const fetchData = async () => {
+      try {
+        const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
 
-  const columns = React.useMemo(
+        const queryParams: any = {
+          email: "cmburboa@gmail.com",
+          limit,
+        }
+
+        if (nextPage) {
+          queryParams.lastEvaluated = nextPage
+        }
+
+        const queryString = new URLSearchParams(queryParams).toString()
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/history?${queryString}`,
+          {
+            method: "get",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        )
+
+        if (!response.ok) {
+          const errorDetails = await response.text()
+          const errorMessage = JSON.parse(errorDetails).message
+        }
+
+        const dataFetched = await response.json()
+
+        // const dataFetched = JSON.parse(
+        //   '{"records":[{"type":"subtract","user_balance":886,"result":"7","date":"September 2, 2024","timestamp":1725312617661},{"type":"subtract","user_balance":885,"result":"7","date":"September 2, 2024","timestamp":1725312633801},{"type":"subtraction","user_balance":884,"result":"-2","date":"September 2, 2024","timestamp":1725313865094},{"type":"subtraction","user_balance":883,"result":"-2","date":"September 2, 2024","timestamp":1725314029593},{"type":"multiplication","user_balance":880,"result":"8","date":"September 2, 2024","timestamp":1725314824977}],"nextPage":"%7B%22pk%22%3A%7B%22S%22%3A%22cmburboa%40gmail.com%22%7D%2C%22sk%22%3A%7B%22N%22%3A%221725314824977%22%7D%7D"}'
+        // )
+
+        setData(dataFetched.records)
+        nextPageRef.current = dataFetched.nextPage
+      } catch (error) {
+        console.error(error)
+      }
+    }
+    fetchData()
+  }, [limit, nextPage])
+
+  const columns = useMemo(
     () => [
-      { Header: "Operation Type", accessor: "type" },
-      { Header: "Date", accessor: "date" },
-      { Header: "Cost", accessor: "cost" },
       {
-        Header: "Balance",
-        accessor: "balance",
-        Cell: ({ value }: any) => `$${value.toFixed(2)}`,
+        Header: "TS",
+        accessor: "timestamp",
+        isVisible: false,
       },
       {
-        Header: "Actions",
-        Cell: ({ row }: any) => (
-          <button
-            className="text-red-600 hover:text-red-800"
-            onClick={() => handleDelete(row.original.id)}
-          >
-            Delete
-          </button>
-        ),
+        Header: "Type",
+        accessor: "type",
+      },
+      {
+        Header: "Balance",
+        accessor: "user_balance",
+      },
+      {
+        Header: "Result",
+        accessor: "result",
+      },
+      {
+        Header: "Date",
+        accessor: "date",
       },
     ],
     []
-  );
+  )
 
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-    state: { pageIndex },
-    canPreviousPage,
-    canNextPage,
-    pageCount,
-    gotoPage,
-    previousPage,
-    nextPage,
-    setPageSize: setTablePageSize,
-  } = useTable(
-    {
-      columns,
-      data,
-      initialState: {
-        pageIndex: 0,
-        pageSize, // Use the single pageSize state
-      },
-      manualPagination: true,
-      pageCount: Math.ceil(data.length / pageSize),
-    },
-    useGlobalFilter,
-    useSortBy,
-    usePagination
-  );
+  const handleRemove = (row: HistoryRecord) => {
+    setData((prevData) =>
+      prevData.filter((item) => item.timestamp !== row.timestamp)
+    )
+  }
 
-  const handleDelete = async (id: number) => {
-    try {
-      await axios.delete(`/api/operations/${id}`);
-      fetchOperations(); // Refresh data after delete
-    } catch (error) {
-      console.error("Error deleting record:", error);
-    }
-  };
+  const handleNextPage = () => {
+    console.log("NEXT")
+    setNextPage(nextPageRef.current)
+  }
+
+  const handlePageSize = (pageSize: number) => {
+    setLimit(pageSize)
+    // fetchData()
+  }
 
   return (
-    <Layout title="Operations History">
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Operations Records</h1>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="border p-2 rounded"
-          />
-        </div>
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <>
-            <table
-              {...getTableProps()}
-              className="min-w-full divide-y divide-gray-200"
-            >
-              <thead>
-                {headerGroups.map((headerGroup) => (
-                  <tr {...headerGroup.getHeaderGroupProps()}>
-                    {headerGroup.headers.map((column) => (
-                      <th
-                        {...column.getHeaderProps(
-                          column.getSortByToggleProps()
-                        )}
-                        className="px-6 py-3"
-                      >
-                        {column.render("Header")}
-                        <span>
-                          {column.isSorted
-                            ? column.isSortedDesc
-                              ? " 🔽"
-                              : " 🔼"
-                            : ""}
-                        </span>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody {...getTableBodyProps()}>
-                {rows.map((row) => {
-                  prepareRow(row);
-                  return (
-                    <tr {...row.getRowProps()}>
-                      {row.cells.map((cell) => (
-                        <td
-                          {...cell.getCellProps()}
-                          className="px-6 py-4 whitespace-nowrap"
-                        >
-                          {cell.render("Cell")}
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <div className="flex items-center mt-4">
-              <button
-                onClick={() => previousPage()}
-                disabled={!canPreviousPage}
-                className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-              >
-                Previous
-              </button>
-              <span className="mx-2">
-                Page {pageIndex + 1} of {pageCount}
-              </span>
-              <button
-                onClick={() => nextPage()}
-                disabled={!canNextPage}
-                className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-              >
-                Next
-              </button>
-              <select
-                value={pageSize}
-                onChange={(e) => {
-                  const newSize = Number(e.target.value);
-                  setPageSize(newSize);
-                  setTablePageSize(newSize); // Update react-table's pageSize
-                }}
-                className="ml-4 border p-2 rounded"
-              >
-                {[10, 20, 30, 40, 50].map((size) => (
-                  <option key={size} value={size}>
-                    Show {size}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
+    <Layout title="History">
+      <div className="flex flex-col items-center md:justify-center min-h-screen bg-gray-100 p-4">
+        <h1 className="text-2xl font-semibold text-center text-gray-900 mb-6">
+          Operations History
+        </h1>
+
+        <DataTable
+          columns={columns}
+          data={data}
+          onRemove={handleRemove}
+          pageSize={limit}
+          setPageSize={handlePageSize}
+          nextPage={handleNextPage}
+        />
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default OperationsPage;
+export default History

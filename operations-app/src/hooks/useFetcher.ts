@@ -38,7 +38,7 @@ export const useFetcher = <
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/${endpoint}`,
         {
-          method: "POST",
+          method: "post",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,

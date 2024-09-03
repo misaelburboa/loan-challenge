@@ -65,7 +65,6 @@ const RegistrationForm = ({
                 },
               });
 
-              console.log(nextStep.signUpStep);
               onStepChange(nextStep);
             } catch (error) {
               setMessage((error as Error).message);
@@ -178,14 +177,12 @@ const ConfirmSignUp = ({
           initialValues={{ email: "", verification_code: "" }}
           validationSchema={validationSchemaConfirmSignUp}
           onSubmit={async ({ email, verification_code }) => {
-            console.log(email, verification_code);
             try {
               const { nextStep } = await confirmSignUp({
                 confirmationCode: verification_code,
                 username: email,
               });
 
-              console.log(nextStep.signUpStep);
               onStepChange(nextStep);
             } catch (error) {
               console.error(error);
@@ -259,7 +256,6 @@ const AutoSignIn = ({
     const asyncSignIn = async () => {
       const { nextStep } = await autoSignIn();
 
-      console.log(nextStep);
       onStepChange(nextStep);
     };
 

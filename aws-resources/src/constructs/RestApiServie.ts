@@ -9,6 +9,7 @@ type OperationMethod = {
   httpMethod: string
   lambda: lambda.IFunction
   needsAuthorizer: boolean
+  methodOptions?: Record<string, any>
 }
 
 export class RestApiService extends Construct {
@@ -76,9 +77,8 @@ export class RestApiService extends Construct {
     httpMethod,
     lambda,
     needsAuthorizer,
+    methodOptions = {},
   }: OperationMethod) {
-    const methodOptions: Record<string, any> = {}
-
     if (needsAuthorizer) {
       methodOptions.authorizationType = apigateway.AuthorizationType.COGNITO
       methodOptions.authorizer = this.authorizer

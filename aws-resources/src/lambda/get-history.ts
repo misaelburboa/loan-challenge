@@ -1,7 +1,7 @@
 import * as lambda from "aws-lambda"
 import * as dynamodb from "@aws-sdk/client-dynamodb"
 import { unmarshall } from "@aws-sdk/util-dynamodb"
-import { CustomResponse } from "../classes/Operation"
+import { CustomResponse, PreconditionException } from "../classes/Operation"
 
 const { OPERATIONS_TABLE } = process.env
 
@@ -11,70 +11,75 @@ if (!OPERATIONS_TABLE) {
 
 const dynamoDbClient = new dynamodb.DynamoDBClient({})
 
+type ExclusiveStartKeyType = {
+  pk: { S: string }
+  sk: { N: string }
+}
+
 export const getHistory = async (event: lambda.APIGatewayProxyEvent) => {
   try {
-    // const email = event.queryStringParameters?.email
-    const email = "cmburboa@gmail.com"
-    const sort = event.queryStringParameters?.sort
+    let email = event.queryStringParameters?.email
 
-    const scanPromises = []
-    const totalSegments = 4
-
-    for (let segment = 0; segment < totalSegments; segment++) {
-      const scanParams: dynamodb.ScanCommandInput = {
-        TableName: OPERATIONS_TABLE,
-        Segment: segment,
-        TotalSegments: totalSegments,
-        FilterExpression: "#pk = :email AND #sk > :sk",
-        ExpressionAttributeNames: {
-          "#pk": "pk",
-          "#sk": "sk",
-        },
-        ExpressionAttributeValues: {
-          ":email": { S: email },
-          ":sk": { N: "2" },
-        },
-      }
-
-      const scanCommand = new dynamodb.ScanCommand(scanParams)
-      scanPromises.push(dynamoDbClient.send(scanCommand))
+    if (!email) {
+      throw new PreconditionException("Email not provided and it is required")
     }
 
-    // Execute all scan commands in parallel
-    const responses = await Promise.all(scanPromises)
+    let lastEvaluatedKeyParam = event?.queryStringParameters?.lastEvaluated
+    let limit = parseInt(event?.queryStringParameters?.limit || "10", 10)
 
-    // Combine results from all segments
-    const combinedItems = responses.flatMap((response) => response.Items || [])
+    let lastEvaluatedKey: ExclusiveStartKeyType | undefined
+    if (lastEvaluatedKeyParam) {
+      lastEvaluatedKey = JSON.parse(decodeURIComponent(lastEvaluatedKeyParam))
+    }
 
-    if (!combinedItems) {
+    const scanParams: dynamodb.ScanCommandInput = {
+      TableName: OPERATIONS_TABLE,
+      FilterExpression: "#pk = :email AND #sk > :sk",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+        "#sk": "sk",
+      },
+      ExpressionAttributeValues: {
+        ":email": { S: email },
+        ":sk": { N: "2" },
+      },
+      Limit: limit,
+      ExclusiveStartKey: lastEvaluatedKey ? lastEvaluatedKey : undefined,
+    }
+
+    const scanCommand = new dynamodb.ScanCommand(scanParams)
+    const response: dynamodb.ScanCommandOutput = await dynamoDbClient.send(
+      scanCommand
+    )
+
+    const items = response.Items || []
+    const lastKey = response.LastEvaluatedKey
+
+    const records = items.map((item) => unmarshall(item))
+
+    const formattedRecords = records.map((item) => {
+      console.log(item.details)
+      const result = item.details?.amount
+        ? item.details.amount
+        : item.details?.stringsGenerated
+
       return {
-        statusCode: 200,
-        body: JSON.stringify([]),
+        type: item.details.operation_type,
+        user_balance: item.details.user_balance,
+        result: result?.toString(),
+        date: new Date(item.sk).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        timestamp: item.sk,
       }
-    }
+    })
 
-    // Unmarshall results
-    const records = combinedItems.map((item) => unmarshall(item))
-
-    // Sort results
-    if (sort?.toUpperCase() === "ASC") {
-      records.sort((a, b) => a.sk - b.sk)
-    } else {
-      records.sort((a, b) => b.sk - a.sk)
-    }
-
-    const formattedRecords = records.map((item) => ({
-      type: item.details.operation_type,
-      user_balance: item.details.user_balance,
-      result: item.details?.amount ?? item.details?.string?.stringsGenerated,
-      date: new Date(item.sk).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    }))
-
-    return new CustomResponse(200, { records: formattedRecords })
+    return new CustomResponse(200, {
+      records: formattedRecords,
+      nextPage: lastKey ? encodeURIComponent(JSON.stringify(lastKey)) : null,
+    })
   } catch (e) {
     return new CustomResponse(500, { message: (e as Error).message })
   }

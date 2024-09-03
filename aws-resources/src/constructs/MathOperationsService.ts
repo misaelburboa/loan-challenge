@@ -207,6 +207,13 @@ export class MathOperationsService extends Construct {
       httpMethod: "GET",
       lambda: userHistoryFunction,
       needsAuthorizer: true,
+      methodOptions: {
+        requestParameters: {
+          "method.request.querystring.email": true,
+          "method.request.querystring.lastEvaluated": false,
+          "method.request.querystring.limit": false,
+        },
+      },
     })
   }
 }
