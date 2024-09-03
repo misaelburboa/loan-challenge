@@ -135,6 +135,22 @@ export class MathOperationsService extends Construct {
       }
     )
 
+    // Lambda Function for multiply operation
+    const softRemoveRecordFunction = new lambdaNodeJs.NodejsFunction(
+      this,
+      "SoftRemoveRecords",
+      {
+        entry: path.join(lambdaDirectoryPath, "soft-remove-record.ts"),
+        handler: "softRemoveRecords",
+        runtime: lambda.Runtime.NODEJS_20_X,
+        timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
+        environment: {
+          OPERATIONS_TABLE: operationsTable.tableName,
+        },
+      }
+    )
+
+
     // Grant read and write access to the Dynamo tables
     operationsTable.grantReadWriteData(additionFunction)
     operationsTable.grantReadWriteData(subtractionFunction)
@@ -143,6 +159,7 @@ export class MathOperationsService extends Construct {
     operationsTable.grantReadWriteData(sqrtFunction)
     operationsTable.grantReadWriteData(randomStringFunction)
     operationsTable.grantReadWriteData(userHistoryFunction)
+    operationsTable.grantReadWriteData(softRemoveRecordFunction)
 
     const restApi = new RestApiService(this, "RestApiService")
 
@@ -212,6 +229,20 @@ export class MathOperationsService extends Construct {
           "method.request.querystring.email": true,
           "method.request.querystring.lastEvaluated": false,
           "method.request.querystring.limit": false,
+        },
+      },
+    })
+
+    const softRemoveResource = restApi.addMathOperationResource("soft-remove-record")
+    restApi.addMathOperationMethod({
+      resource: softRemoveResource,
+      httpMethod: "DELETE",
+      lambda: softRemoveRecordFunction,
+      needsAuthorizer: true,
+      methodOptions: {
+        requestParameters: {
+          "method.request.querystring.email": true,
+          "method.request.querystring.timestamp": true,
         },
       },
     })

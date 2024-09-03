@@ -73,7 +73,9 @@ export type RecordItem = {
   details: {
     amount?: number
     operation_type: string
-    user_balance: number
+    user_balance: number,
+    stringsGenerated?: string
+    removed?: boolean
   }
 }
 

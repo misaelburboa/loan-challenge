@@ -14,6 +14,7 @@ type HistoryRecord = {
   timestamp: number
 }
 
+const email = "cmburboa@gmail.com"
 const History: React.FC = () => {
   const nextPageRef = useRef<string>("")
 
@@ -22,13 +23,12 @@ const History: React.FC = () => {
   const [nextPage, setNextPage] = useState<string>("")
 
   useEffect(() => {
-    console.log("USEEFF")
     const fetchData = async () => {
       try {
         const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
 
         const queryParams: any = {
-          email: "cmburboa@gmail.com",
+          email,
           limit,
         }
 
@@ -55,10 +55,6 @@ const History: React.FC = () => {
         }
 
         const dataFetched = await response.json()
-
-        // const dataFetched = JSON.parse(
-        //   '{"records":[{"type":"subtract","user_balance":886,"result":"7","date":"September 2, 2024","timestamp":1725312617661},{"type":"subtract","user_balance":885,"result":"7","date":"September 2, 2024","timestamp":1725312633801},{"type":"subtraction","user_balance":884,"result":"-2","date":"September 2, 2024","timestamp":1725313865094},{"type":"subtraction","user_balance":883,"result":"-2","date":"September 2, 2024","timestamp":1725314029593},{"type":"multiplication","user_balance":880,"result":"8","date":"September 2, 2024","timestamp":1725314824977}],"nextPage":"%7B%22pk%22%3A%7B%22S%22%3A%22cmburboa%40gmail.com%22%7D%2C%22sk%22%3A%7B%22N%22%3A%221725314824977%22%7D%7D"}'
-        // )
 
         setData(dataFetched.records)
         nextPageRef.current = dataFetched.nextPage
@@ -96,9 +92,26 @@ const History: React.FC = () => {
     []
   )
 
-  const handleRemove = (row: HistoryRecord) => {
+  const handleRemove = async (row: HistoryRecord) => {
     setData((prevData) =>
       prevData.filter((item) => item.timestamp !== row.timestamp)
+    )
+
+    const queryString = new URLSearchParams({
+      email,
+      timestamp: row.timestamp.toString(),
+    }).toString()
+
+    const authToken = (await fetchAuthSession()).tokens?.idToken?.toString()
+
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/soft-remove-record?${queryString}`,
+      {
+        method: "delete",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
     )
   }
 

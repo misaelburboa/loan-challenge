@@ -1,7 +1,7 @@
 import * as lambda from "aws-lambda"
 import * as dynamodb from "@aws-sdk/client-dynamodb"
 import { unmarshall } from "@aws-sdk/util-dynamodb"
-import { CustomResponse, PreconditionException } from "../classes/Operation"
+import { CustomResponse, PreconditionException, type RecordItem } from "../classes/Operation"
 
 const { OPERATIONS_TABLE } = process.env
 
@@ -25,7 +25,7 @@ export const getHistory = async (event: lambda.APIGatewayProxyEvent) => {
     }
 
     let lastEvaluatedKeyParam = event?.queryStringParameters?.lastEvaluated
-    let limit = parseInt(event?.queryStringParameters?.limit || "10", 10)
+    let limit = parseInt(event?.queryStringParameters?.limit || "20", 10)
 
     let lastEvaluatedKey: ExclusiveStartKeyType | undefined
     if (lastEvaluatedKeyParam) {
@@ -55,10 +55,11 @@ export const getHistory = async (event: lambda.APIGatewayProxyEvent) => {
     const items = response.Items || []
     const lastKey = response.LastEvaluatedKey
 
-    const records = items.map((item) => unmarshall(item))
+    const records = items.map((item) => unmarshall(item)) as RecordItem[]
 
-    const formattedRecords = records.map((item) => {
-      console.log(item.details)
+    const filteredActive = records.filter(record => (!record.details.removed))
+
+    const formattedRecords = filteredActive.map((item) => {
       const result = item.details?.amount
         ? item.details.amount
         : item.details?.stringsGenerated
