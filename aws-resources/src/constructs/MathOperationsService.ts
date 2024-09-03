@@ -91,6 +91,17 @@ export class MathOperationsService extends Construct {
       }
     )
 
+    // Lambda Function for sqrt operation
+    const sqrtFunction = new lambdaNodeJs.NodejsFunction(this, "SqrtFunction", {
+      entry: path.join(lambdaDirectoryPath, "sqrt.ts"),
+      handler: "sqrt",
+      runtime: lambda.Runtime.NODEJS_20_X,
+      timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
+      environment: {
+        OPERATIONS_TABLE: operationsTable.tableName,
+      },
+    })
+
     // Lambda Function for random string operation
     const randomStringFunction = new lambdaNodeJs.NodejsFunction(
       this,
@@ -110,12 +121,28 @@ export class MathOperationsService extends Construct {
       }
     )
 
+    const userHistoryFunction = new lambdaNodeJs.NodejsFunction(
+      this,
+      "HistoryFunction",
+      {
+        entry: path.join(lambdaDirectoryPath, "get-history.ts"),
+        handler: "getHistory",
+        runtime: lambda.Runtime.NODEJS_20_X,
+        timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
+        environment: {
+          OPERATIONS_TABLE: operationsTable.tableName,
+        },
+      }
+    )
+
     // Grant read and write access to the Dynamo tables
     operationsTable.grantReadWriteData(additionFunction)
     operationsTable.grantReadWriteData(subtractionFunction)
     operationsTable.grantReadWriteData(multiplicationFunction)
     operationsTable.grantReadWriteData(divisionFunction)
+    operationsTable.grantReadWriteData(sqrtFunction)
     operationsTable.grantReadWriteData(randomStringFunction)
+    operationsTable.grantReadWriteData(userHistoryFunction)
 
     const restApi = new RestApiService(this, "RestApiService")
 
@@ -155,12 +182,30 @@ export class MathOperationsService extends Construct {
       needsAuthorizer: true,
     })
 
+    // Sqrt API GW Resource
+    const sqrtResource = restApi.addMathOperationResource("sqrt")
+    restApi.addMathOperationMethod({
+      resource: sqrtResource,
+      httpMethod: "POST",
+      lambda: sqrtFunction,
+      needsAuthorizer: true,
+    })
+
     // Random Str API GW Resource
     const randomStrResource = restApi.addMathOperationResource("random-str")
     restApi.addMathOperationMethod({
       resource: randomStrResource,
       httpMethod: "POST",
       lambda: randomStringFunction,
+      needsAuthorizer: true,
+    })
+
+    // User History API GW Resource
+    const historyResource = restApi.addMathOperationResource("history")
+    restApi.addMathOperationMethod({
+      resource: historyResource,
+      httpMethod: "GET",
+      lambda: userHistoryFunction,
       needsAuthorizer: true,
     })
   }

@@ -82,7 +82,7 @@ export type RequestParams<T> = {
   email: string
 }
 
-type OperationFunction = (values: number[]) => number
+export type OperationFunction = (values: number[]) => number
 
 const { OPERATIONS_TABLE } = process.env
 
@@ -98,7 +98,7 @@ export class Operation {
   }
 
   private isEmptyObject(obj: Record<string, string>) {
-    return Object.keys(obj).length === 0;
+    return Object.keys(obj).length === 0
   }
 
   setEmail(email: string) {

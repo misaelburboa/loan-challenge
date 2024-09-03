@@ -58,6 +58,7 @@ const AddPage: FC = () => {
 
           <FormikProvider value={formik}>
             <Form>
+
               <FieldArray name="numbers">
                 {({ push, remove }) => (
                   <>
@@ -87,6 +88,7 @@ const AddPage: FC = () => {
                   </>
                 )}
               </FieldArray>
+
               <div className="text-center">
                 <Cta isLoading={isLoading} ctaText="Calculate" />
               </div>
