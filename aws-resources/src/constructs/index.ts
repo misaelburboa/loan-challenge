@@ -1,1 +1,3 @@
-export * from "./RestApiServie"
+export * from "./RestApiService"
+export * from "./WebsiteService"
+export * from "./MathOperationsService"
