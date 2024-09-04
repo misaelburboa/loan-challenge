@@ -6,6 +6,7 @@ import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik"
 import * as Yup from "yup"
 import { useFetcher } from "@/hooks/useFetcher"
 import { Cta } from "@/components/Cta"
+import withAuth from "@/components/HOC/withAuth"
 
 type OperationFetcherParams = {
   values: number[]
@@ -35,7 +36,7 @@ const AddPage: FC = () => {
 
   const formik = useFormik({
     initialValues: {
-      numbers: [0], // Initialize with one number field
+      numbers: [1, 1],
     },
     validationSchema: Yup.object({
       numbers: Yup.array().of(Yup.number().required("Required")),
@@ -107,4 +108,4 @@ const AddPage: FC = () => {
   )
 }
 
-export default AddPage
+export default withAuth(AddPage)

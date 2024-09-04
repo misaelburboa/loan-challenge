@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "Loan Pro Challenge made by Misael Burboa",
 };
 
-export default function RootLayout({
+export default function withAuthRootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

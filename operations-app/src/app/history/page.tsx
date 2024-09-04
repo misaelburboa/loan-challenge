@@ -4,6 +4,7 @@ import React, { useMemo, useState, useEffect, useCallback, useRef } from "react"
 import DataTable from "./DataTable" // Import the DataTable component
 import { fetchAuthSession } from "aws-amplify/auth"
 import Layout from "@/components/Layout"
+import withAuth from "@/components/HOC/withAuth"
 
 type HistoryRecord = {
   id: number
@@ -145,4 +146,4 @@ const History: React.FC = () => {
   )
 }
 
-export default History
+export default withAuth(History)

@@ -6,6 +6,7 @@ import { useFormik, FormikProvider, Form, Field } from "formik"
 import * as Yup from "yup"
 import { Cta } from "@/components/Cta"
 import { useFetcher } from "@/hooks/useFetcher"
+import withAuth from "@/components/HOC/withAuth"
 
 type RandomStringFetcherParams = {
   num: number
@@ -114,4 +115,4 @@ const CustomOptionsPage: FC = () => {
   )
 }
 
-export default CustomOptionsPage
+export default withAuth(CustomOptionsPage)

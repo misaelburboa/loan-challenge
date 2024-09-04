@@ -1,32 +1,36 @@
-"use client";
+"use client"
 
-import { FC, ReactNode, useEffect, useState } from "react";
-import Link from "next/link";
-import { getCurrentUser, signOut } from "aws-amplify/auth";
-import { useUser } from "@/hooks/useUser";
+import { FC, ReactNode } from "react"
+import Link from "next/link"
+import { signOut } from "aws-amplify/auth"
+import { useUser } from "@/hooks/useUser"
+import { useRouter } from "next/navigation"
 
 const SignOut = ({ onSignOut }: { onSignOut: () => void }) => {
+  const router = useRouter()
+
   return (
     <Link
       href="/sqrt"
       className="text-white hover:text-gray-300 px-4 py-2"
       onClick={async () => {
-        await signOut();
-        onSignOut();
+        await signOut()
+        onSignOut()
+        router.push("/login")
       }}
     >
       Logout
     </Link>
-  );
-};
+  )
+}
 
 interface LayoutProps {
-  children: ReactNode;
-  title: string;
+  children: ReactNode
+  title: string
 }
 
 const Layout: FC<LayoutProps> = ({ children, title }) => {
-  const { isLoggedIn, onSignOut } = useUser();
+  const { isLoggedIn, onSignOut } = useUser()
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -83,7 +87,7 @@ const Layout: FC<LayoutProps> = ({ children, title }) => {
             {isLoggedIn ? (
               <SignOut
                 onSignOut={() => {
-                  onSignOut();
+                  onSignOut()
                 }}
               />
             ) : undefined}
@@ -93,7 +97,7 @@ const Layout: FC<LayoutProps> = ({ children, title }) => {
 
       <main className="flex-grow">{children}</main>
     </div>
-  );
-};
+  )
+}
 
-export default Layout;
+export default Layout

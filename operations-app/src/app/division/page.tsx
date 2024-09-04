@@ -6,6 +6,7 @@ import { useFormik, FieldArray, FormikProvider, Form, Field } from "formik"
 import * as Yup from "yup"
 import { useFetcher } from "@/hooks/useFetcher"
 import { Cta } from "@/components/Cta"
+import withAuth from "@/components/HOC/withAuth"
 
 type OperationFetcherParams = {
   values: number[]
@@ -105,4 +106,4 @@ const DividePage: FC = () => {
   )
 }
 
-export default DividePage
+export default withAuth(DividePage)

@@ -45,7 +45,6 @@ const DataTable: React.FC<DataTableProps> = ({
     headerGroups,
     page: pagedData,
     prepareRow,
-    state: { pageSize: statePageSize },
   }: TableInstance = useTable(
     {
       columns,
