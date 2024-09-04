@@ -76,6 +76,8 @@ export class RandomString extends Operation {
 
       this.validateUserCredits(userConfig, operationCost)
 
+      this.validateActiveUser()
+
       const generatedStrings = await this.generateRandomString(
         params as RandomStringParams
       )
@@ -96,16 +98,8 @@ export class RandomString extends Operation {
       await this.saveOperation(operationRecord)
 
       return generatedStrings
-    } catch (e) {
-      if (e instanceof PreconditionException) {
-        return new CustomResponse(PreconditionException.NUMBER_CODE, {
-          message: e.message,
-        })
-      }
-
-      return new CustomResponse(500, {
-        message: (e as Error).message,
-      })
+    } catch (error) {
+      throw error
     }
   }
 }

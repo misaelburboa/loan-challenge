@@ -11,7 +11,7 @@ const SignOut = ({ onSignOut }: { onSignOut: () => void }) => {
 
   return (
     <Link
-      href="/sqrt"
+      href="/login"
       className="text-white hover:text-gray-300 px-4 py-2"
       onClick={async () => {
         await signOut()

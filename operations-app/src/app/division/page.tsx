@@ -106,4 +106,4 @@ const DividePage: FC = () => {
   )
 }
 
-export default withAuth(DividePage)
+export default DividePage

@@ -90,8 +90,8 @@ const { OPERATIONS_TABLE } = process.env
 
 export class Operation {
   type: string
-
   email: string
+  userConfig: UserConfig;
 
   dynamoDbClient = new dynamodb.DynamoDBClient({})
 
@@ -142,7 +142,11 @@ export class Operation {
         throw new NotFoundException("User not found")
       }
 
-      return unmarshall(response.Item) as UserConfig
+      const userConfig = unmarshall(response.Item) as UserConfig
+
+      this.userConfig = userConfig;
+
+      return userConfig;
     } catch (error) {
       throw error
     }
@@ -176,6 +180,12 @@ export class Operation {
     }
 
     return true
+  }
+
+  validateActiveUser() {
+    if (this.userConfig.details.status === "inactive") {
+      throw new PreconditionException("The current user is inactive");
+    }
   }
 
   async updateUserCredit(userConfig: UserConfig, operationCost: number) {
@@ -228,6 +238,8 @@ export class Operation {
   ) {
     try {
       this.validateUserCredits(userConfig, operationCost)
+
+      this.validateActiveUser()
 
       const operationResult = operation(values)
 

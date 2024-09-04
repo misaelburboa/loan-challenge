@@ -1,20 +1,23 @@
-'use client'
-
-import React, { useEffect, ReactElement } from "react"
+import React, { useEffect, useState, ReactElement } from "react"
 import { getCurrentUser } from "aws-amplify/auth"
+import { LoadingSpinner } from '../LoadingSpinner';
 
-interface WithAuthProps {
+export interface WithAuthProps {
+  user?: any
 }
 
-const withAuth = (WrappedComponent: React.ComponentType<WithAuthProps>) => {
-  const AuthHOC = (props: WithAuthProps): ReactElement => {
-    const [loading, setLoading] = React.useState(true)
+const withAuth = <P extends object>(
+  WrappedComponent: React.FC<P & WithAuthProps>
+) => {
+  const AuthHOC = (props: any): ReactElement => {
+    const [loading, setLoading] = useState(true)
+    const [user, setUser] = useState<any>(null)
 
     useEffect(() => {
       const checkAuth = async () => {
         try {
-          const { signInDetails } = await getCurrentUser()
-          console.log(signInDetails)
+          const currentUser = await getCurrentUser()
+          setUser(currentUser)
           setLoading(false)
         } catch {
           window.location.href = "/login"
@@ -25,10 +28,10 @@ const withAuth = (WrappedComponent: React.ComponentType<WithAuthProps>) => {
     }, [])
 
     if (loading) {
-      return <div>Loading...</div>
+      return <LoadingSpinner />
     }
 
-    return <WrappedComponent {...props} />
+    return <WrappedComponent {...props} user={user} />
   }
 
   return AuthHOC

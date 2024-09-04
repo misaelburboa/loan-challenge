@@ -20,36 +20,40 @@ export class Multiplication extends Operation {
   }
 
   async executeOperation(body: string) {
-    const input = this.getInput(body)
+    try {
+      const input = this.getInput(body)
 
-    const email = input.email
-    const params = input.params as { values: number[] }
+      const email = input.email
+      const params = input.params as { values: number[] }
 
-    const userConfig = await this.getUserConfig(email)
+      const userConfig = await this.getUserConfig(email)
 
-    const operationConfig = await this.getOperationConfig(this.type, "1")
+      const operationConfig = await this.getOperationConfig(this.type, "1")
 
-    const operationResult = await this.makeOperation(
-      userConfig,
-      operationConfig.details.cost,
-      multiplyOperation,
-      params.values
-    )
+      const operationResult = await this.makeOperation(
+        userConfig,
+        operationConfig.details.cost,
+        multiplyOperation,
+        params.values
+      )
 
-    const operationRecord = {
-      pk: email,
-      sk: Date.now(),
-      details: {
-        operation_type: this.type,
-        amount: operationResult,
-        user_balance:
-          userConfig.details.user_balance - operationConfig.details.cost,
-      },
+      const operationRecord = {
+        pk: email,
+        sk: Date.now(),
+        details: {
+          operation_type: this.type,
+          amount: operationResult,
+          user_balance:
+            userConfig.details.user_balance - operationConfig.details.cost,
+        },
+      }
+
+      await this.saveOperation(operationRecord)
+
+      return operationResult
+    } catch (error) {
+      throw error
     }
-
-    await this.saveOperation(operationRecord)
-
-    return operationResult
   }
 }
 
@@ -61,7 +65,9 @@ export const multiplication = async (event: lambda.APIGatewayProxyEvent) => {
       return new CustomResponse(400, { message: "No body provided" })
     }
 
-    const operationResult = await multiplicationInstance.executeOperation(event.body)
+    const operationResult = await multiplicationInstance.executeOperation(
+      event.body
+    )
 
     return new CustomResponse(200, { result: operationResult })
   } catch (e) {

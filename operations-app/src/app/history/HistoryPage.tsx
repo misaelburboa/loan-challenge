@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState, useEffect, useCallback, useRef } from "react"
+import React, { useMemo, useState, useEffect, useRef } from "react"
 import DataTable from "./DataTable" // Import the DataTable component
 import { fetchAuthSession } from "aws-amplify/auth"
 import Layout from "@/components/Layout"
@@ -15,9 +15,9 @@ type HistoryRecord = {
   timestamp: number
 }
 
-interface HistoryProps extends WithAuthProps {}
+interface HistoryPageProps extends WithAuthProps {}
 
-const History: React.FC<HistoryProps> = ({ user }) => {
+export const HistoryPage: React.FC<HistoryPageProps> = withAuth(({ user }) => {
   const email = user.signInDetails.loginId
 
   const nextPageRef = useRef<string>("")
@@ -127,7 +127,6 @@ const History: React.FC<HistoryProps> = ({ user }) => {
 
   const handlePageSize = (pageSize: number) => {
     setLimit(pageSize)
-    // fetchData()
   }
 
   return (
@@ -148,6 +147,4 @@ const History: React.FC<HistoryProps> = ({ user }) => {
       </div>
     </Layout>
   )
-}
-
-export default withAuth(History)
+})

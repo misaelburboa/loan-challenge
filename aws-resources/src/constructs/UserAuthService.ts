@@ -28,6 +28,9 @@ export class UserAuthSupportService extends Construct {
       supportedIdentityProviders: [
         cognito.UserPoolClientIdentityProvider.COGNITO,
       ],
+      accessTokenValidity: cdk.Duration.minutes(15),
+      idTokenValidity: cdk.Duration.minutes(15),
+      refreshTokenValidity: cdk.Duration.hours(1)
     });
 
     new cdk.CfnOutput(this, "UserPoolId", {
