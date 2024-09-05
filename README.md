@@ -33,13 +33,14 @@ This user is set up with 20 credits, you can perform the operations you want, bu
 
 This is challange project. It uses serverless technologies and due to that is not possible (at least in an easy way) to test it in local. You can for sure test the frontend, but in order to test the backend you need to deploy the lambdas and you would be required to configure your aws account and all the process that involves.
 
-As I mention before, you can test the frontend locally, though. These are some commands to test the NextJs installation
+As I mentioned before, you can test the frontend locally though.
 
 Also please consider the pagination and filtering issues are expected due to the nature of the DynamoDB database, this could be achieved using an RDS, but I would like to explain why I used this kind of DB instead, and, if you want, I can make the same mounting an RDS, I just did not want to incur in further costs for this challenge, but if you want me to do it, I will be happy to explain how I can achieve that in a call.
 
 ## Getting Started
+These are some commands to test the NextJs installation
 
-First, run the development server:
+Run the development server:
 
 ```bash
 npm run dev
