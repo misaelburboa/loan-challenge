@@ -15,6 +15,6 @@ export class MathOperationsStack extends cdk.Stack {
       lambdaDirectoryPath: lambdasDirPath,
     })
 
-    new WebsiteService(this, "WebsiteService", {})
+    new WebsiteService(this, "WebsiteService")
   }
 }

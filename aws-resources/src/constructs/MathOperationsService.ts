@@ -4,7 +4,7 @@ import * as dynamoDb from "aws-cdk-lib/aws-dynamodb"
 import * as lambda from "aws-cdk-lib/aws-lambda"
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs"
 import * as path from "path"
-import { RestApiService } from "./RestApiServie"
+import { RestApiService } from "./RestApiService"
 
 export interface MathOperationsServiceInterface extends cdk.StackProps {
   lambdaDirectoryPath: string
@@ -150,7 +150,6 @@ export class MathOperationsService extends Construct {
       }
     )
 
-
     // Grant read and write access to the Dynamo tables
     operationsTable.grantReadWriteData(additionFunction)
     operationsTable.grantReadWriteData(subtractionFunction)
@@ -233,7 +232,8 @@ export class MathOperationsService extends Construct {
       },
     })
 
-    const softRemoveResource = restApi.addMathOperationResource("soft-remove-record")
+    const softRemoveResource =
+      restApi.addMathOperationResource("soft-remove-record")
     restApi.addMathOperationMethod({
       resource: softRemoveResource,
       httpMethod: "DELETE",
