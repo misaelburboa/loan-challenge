@@ -5,6 +5,22 @@ https://d3si8pmai2ptrt.cloudfront.net/login
 
 we can use Route53 to include a domain but we will incur in more costs
 
+## Users to test
+Deactivated User:
+- user: inactive-user@yopmail.com
+- password: Test.123
+
+Active User:
+- user: active-user@yopmail.com
+- password: Test.123
+
+## Operation/Cost
+Addition                  => 1
+Subtraction               => 1
+Multiplication            => 3
+Square Root               => 4
+Random Strings Generation => 5
+
 ## Important Note
 
 This is challange project. It uses serverless technologies and due to that is not possible (at least in an easy way) to test it in local. You can for sure test the frontend, but in order to test the backend you need to deploy the lambdas and you would be required to configure your aws account and all the process that involves.
