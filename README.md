@@ -35,6 +35,8 @@ This is challange project. It uses serverless technologies and due to that is no
 
 As I mention before, you can test the frontend locally, though. These are some commands to test the NextJs installation
 
+Also please consider the pagination issues are expected due to the nature of the DynamoDB database, this could be achieved using an RDS, but I would like to explain why I used this kind of DB, and, if you want, I can make the same mounting an RDS, I just did not want to incur in further costs for this challenge, but if you want me to do it, I will be happy to explain how I can achieve that in a call.
+
 ## Getting Started
 
 First, run the development server:
