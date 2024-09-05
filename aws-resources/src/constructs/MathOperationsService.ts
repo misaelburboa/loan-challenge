@@ -113,7 +113,7 @@ export class MathOperationsService extends Construct {
         timeout: cdk.Duration.seconds(DEFAULT_LAMBDA_TIMEOUT),
         environment: {
           OPERATIONS_TABLE: operationsTable.tableName,
-          // This should be appended in some CI/CD process, but for the sake of the example is ok
+          // This should be appended in some CI/CD process, maybe using AWS Parameter Store or Secrets Manager, but for the sake of the example is ok
           RANDOM_STRING_API_KEY: "df5ca201-d5d2-4e01-ad75-89fcd049a38f",
           RANDOM_STRING_API_ENDPOINT:
             "https://api.random.org/json-rpc/4/invoke",
