@@ -1,4 +1,4 @@
-## Live site
+# Live site
 You can check the live site in the next link.
 
 https://d3si8pmai2ptrt.cloudfront.net/login
@@ -6,20 +6,28 @@ https://d3si8pmai2ptrt.cloudfront.net/login
 we can use Route53 to include a domain but we will incur in more costs
 
 ## Users to test
-Deactivated User:
+
+### Deactivated User
 - user: inactive-user@yopmail.com
 - password: Test.123
 
-Active User:
+### Active User
+
+This user is set up with 20 credits, you can perform the operations you want, but once the credits are not enough, you'll see an error saying so.
+
 - user: active-user@yopmail.com
 - password: Test.123
 
 ## Operation/Cost
-Addition                  => 1
-Subtraction               => 1
-Multiplication            => 3
-Square Root               => 4
-Random Strings Generation => 5
+
+| Operation                      | Value |
+|--------------------------------|-------|
+| Addition                       | 1     |
+| Subtraction                    | 1     |
+| Multiplication                 | 3     |
+| Square Root                    | 4     |
+| Random Strings Generation      | 5     |
+
 
 ## Important Note
 
