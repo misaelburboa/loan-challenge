@@ -62,6 +62,6 @@ The Backend is made using these AWS Serverless technologies
 - AWS CloudFront as CDN.
 - AWS Lambda@Edge to support requests params modification.
 - AWS S3 as files hosting.
-- AWS Cognito to handle the user sessions.
+- AWS Cognito & AWS Amplify to handle the user sessions.
 
 As you can see I tried to leverage the AWS services as much as I could.
